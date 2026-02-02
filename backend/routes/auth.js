@@ -26,9 +26,6 @@ const getTokenExpiration = () => {
   return new Date(Date.now() + value * multipliers[unit]);
 };
 
-// @route   POST /api/auth/register
-// @desc    Register a new user
-// @access  Public
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -79,9 +76,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// @route   POST /api/auth/login
-// @desc    Login user
-// @access  Public
+
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -141,9 +136,6 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// @route   POST /api/auth/logout
-// @desc    Logout user (invalidate token)
-// @access  Private
 router.post('/logout', protect, async (req, res) => {
   try {
     // Remove token from whitelist
@@ -162,9 +154,6 @@ router.post('/logout', protect, async (req, res) => {
   }
 });
 
-// @route   POST /api/auth/logout-all
-// @desc    Logout from all devices
-// @access  Private
 router.post('/logout-all', protect, async (req, res) => {
   try {
     // Remove all tokens for this user
@@ -183,9 +172,6 @@ router.post('/logout-all', protect, async (req, res) => {
   }
 });
 
-// @route   GET /api/auth/me
-// @desc    Get current user
-// @access  Private
 router.get('/me', protect, async (req, res) => {
   res.json({
     success: true,
