@@ -3,9 +3,6 @@ const { protect, authorize } = require('../middleware/auth');
 
 const router = express.Router();
 
-// @route   GET /api/protected/user
-// @desc    Route accessible by all authenticated users
-// @access  Private (all roles)
 router.get('/user', protect, (req, res) => {
   res.json({
     success: true,
@@ -17,9 +14,6 @@ router.get('/user', protect, (req, res) => {
   });
 });
 
-// @route   GET /api/protected/moderator
-// @desc    Route accessible by moderators and admins
-// @access  Private (moderator, admin)
 router.get('/moderator', protect, authorize('moderator', 'admin'), (req, res) => {
   res.json({
     success: true,
@@ -31,9 +25,6 @@ router.get('/moderator', protect, authorize('moderator', 'admin'), (req, res) =>
   });
 });
 
-// @route   GET /api/protected/admin
-// @desc    Route accessible only by admins
-// @access  Private (admin only)
 router.get('/admin', protect, authorize('admin'), (req, res) => {
   res.json({
     success: true,

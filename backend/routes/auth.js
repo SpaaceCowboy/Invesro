@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const TokenWhitelist = require('../models/TokenWhitelist');
 const { protect } = require('../middleware/auth');
+const validate = require('../middleware/validation')
+const { registerSchema, loginSchema } = require('../validations/auth')
 
 const router = express.Router();
 
@@ -17,7 +19,7 @@ const generateToken = (id) => {
 const getTokenExpiration = () => {
   const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
   const match = expiresIn.match(/(\d+)([dhms])/);
-  if (!match) return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // Default 7 days
+  if (!match) return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); 
   
   const value = parseInt(match[1]);
   const unit = match[2];
@@ -26,14 +28,11 @@ const getTokenExpiration = () => {
   return new Date(Date.now() + value * multipliers[unit]);
 };
 
-// @route   POST /api/auth/register
-// @desc    Register a new user
-// @access  Public
-router.post('/register', async (req, res) => {
+
+router.post('/register',validate(registerSchema), async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
-    // Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
@@ -42,18 +41,16 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // Create user (only allow 'user' role on registration, admin must be set manually)
     const user = await User.create({
       name,
       email,
       password,
-      role: role === 'admin' ? 'user' : (role || 'user') // Prevent self-admin registration
+      role: role === 'admin' ? 'user' : (role || 'user') 
     });
 
-    // Generate token
+   
     const token = generateToken(user._id);
     
-    // Add token to whitelist
     await TokenWhitelist.addToken(token, user._id, getTokenExpiration());
 
     res.status(201).json({
@@ -79,22 +76,10 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// @route   POST /api/auth/login
-// @desc    Login user
-// @access  Public
-router.post('/login', async (req, res) => {
+router.post('/login',validate(loginSchema), async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide email and password'
-      });
-    }
-
-    // Find user and include password
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
       return res.status(401).json({
@@ -103,7 +88,6 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Check password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({
@@ -112,10 +96,8 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Generate token
     const token = generateToken(user._id);
     
-    // Add token to whitelist
     await TokenWhitelist.addToken(token, user._id, getTokenExpiration());
 
     res.json({
@@ -141,12 +123,8 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// @route   POST /api/auth/logout
-// @desc    Logout user (invalidate token)
-// @access  Private
 router.post('/logout', protect, async (req, res) => {
   try {
-    // Remove token from whitelist
     await TokenWhitelist.removeToken(req.token);
 
     res.json({
@@ -162,12 +140,9 @@ router.post('/logout', protect, async (req, res) => {
   }
 });
 
-// @route   POST /api/auth/logout-all
-// @desc    Logout from all devices
-// @access  Private
+
 router.post('/logout-all', protect, async (req, res) => {
   try {
-    // Remove all tokens for this user
     await TokenWhitelist.removeAllUserTokens(req.user._id);
 
     res.json({
@@ -183,9 +158,6 @@ router.post('/logout-all', protect, async (req, res) => {
   }
 });
 
-// @route   GET /api/auth/me
-// @desc    Get current user
-// @access  Private
 router.get('/me', protect, async (req, res) => {
   res.json({
     success: true,
