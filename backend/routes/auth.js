@@ -29,7 +29,7 @@ const getTokenExpiration = () => {
 };
 
 
-router.post('/register',validate(registerSchema), async (req, res) => {
+router.post('/register', validate(registerSchema), async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
@@ -80,6 +80,8 @@ router.post('/login',validate(loginSchema), async (req, res) => {
   try {
     const { email, password } = req.body;
 
+
+
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
       return res.status(401).json({
@@ -97,7 +99,6 @@ router.post('/login',validate(loginSchema), async (req, res) => {
     }
 
     const token = generateToken(user._id);
-    
     await TokenWhitelist.addToken(token, user._id, getTokenExpiration());
 
     res.json({
