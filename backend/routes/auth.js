@@ -37,7 +37,10 @@ router.post('/register', validate(registerSchema), async (req, res) => {
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: 'User already exists with this email'
+        message: 'Validation failed',
+        errors: [
+          { field: 'email', message: 'Email already registered'}
+        ]
       });
     }
 
@@ -45,7 +48,7 @@ router.post('/register', validate(registerSchema), async (req, res) => {
       name,
       email,
       password,
-      role: role === 'admin' ? 'user' : (role || 'user') 
+      role: role || 'user'
     });
 
    
@@ -83,10 +86,14 @@ router.post('/login',validate(loginSchema), async (req, res) => {
 
 
     const user = await User.findOne({ email }).select('+password');
+
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials'
+        message: 'Validation failed',
+        errors: [
+          { field: 'email', message: 'Email not found'}
+        ]
       });
     }
 
@@ -94,7 +101,10 @@ router.post('/login',validate(loginSchema), async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials'
+        message: 'Validation failed',
+        errors: [
+          { field: 'password', message: 'Incorrect password'}
+        ]
       });
     }
 

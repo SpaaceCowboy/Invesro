@@ -33,20 +33,31 @@ const registerSchema = joi.object({
     }),
 
     role: joi.string()
-        .valid('user', 'moderator')
+        .valid('user', 'moderator', 'admin')
         .optional()
         .messages({
-            '.any.only': 'Role must bem either user or moderator'
+            '.any.only': 'Role must be user, moderator, or admin'
         })
 })
 
-const loginSchema = joi.string()
-    .min(1)
-    .required()
-    .messages({
+const loginSchema = joi.object({
+    email: joi.string()
+      .trim()
+      .email()
+      .required()
+      .messages({
+        'string.empty': 'Email is required',
+        'string.email': 'Invalid email format',
+        'any.required': 'Email is required'
+      }),
+  
+    password: joi.string()
+      .required()
+      .messages({
         'string.empty': 'Password is required',
         'any.required': 'Password is required'
-    })
+      })
+  });
 
 
 module.exports = {

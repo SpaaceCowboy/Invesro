@@ -13,7 +13,7 @@ const validate = (schema) => {
 
             return res.status(401).json({
                 success: false,
-                message: 'wrong email or password',
+                message: 'Validation failed',
                 errors
             });
         }
